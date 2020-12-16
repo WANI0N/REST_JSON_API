@@ -1,0 +1,404 @@
+{
+	"info": {
+		"_postman_id": "ea446e46-ba81-489d-9223-983a2c52035c",
+		"name": "REST JSON API in node.js",
+		"description": "# Introduction\nRecord functions:\nCreate\nRead\nUpdate\nDelete\n\n# Overview\nPrerequesites:\nMongo DB installed on server\nChange URL in env variables to server URL before deploying; by default set to localhost\n\n# Authentication\nset 'AUTH' in env varibles, if not set server does not require authetification key\nAuthetification is computed as follows:\n-Header 'AUTH' is set to=SHA256(payload + key + UTC_Time)\n-hence the server authetification changes every second\n-UTC time format is YYYYMMDDHHMMSS\n-to accommodate low network speed, server checks last 10 seconds\n\n# Error Codes\nClassic http response codes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "All records",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "5f18033f-d7a9-4e55-b89a-8447c8b76128",
+						"exec": [
+							"function generateAuthHeader(dataToSign){\r",
+							"    var hash = CryptoJS.SHA256(dataToSign);\r",
+							"    return hash.toString(CryptoJS.enc.Hex)\r",
+							"}\r",
+							"\r",
+							"function getTimeStamp(){\r",
+							"    t = new Date();\r",
+							"    t = t.toISOString().replace(/T/, ' ').replace(/\\..+/, '');\r",
+							"    return t.match( /\\d+/g ).join('');\r",
+							"}\r",
+							"\r",
+							"function isEnvValuePopulated(envVal) {\r",
+							"    if (_.isEmpty(pm.environment.get(envVal))) {\r",
+							"        pm.environment.set(envVal, \"--REQUIRED-VALUE-MISSING--\");\r",
+							"        return false;\r",
+							"    } else {\r",
+							"        return true;\r",
+							"    }\r",
+							"}\r",
+							"\r",
+							"isEnvValuePopulated(\"API_KEY\");\r",
+							"\r",
+							"var authHeaderValue = generateAuthHeader(pm.environment.get(\"API_KEY\") + getTimeStamp())\r",
+							"pm.environment.set(\"authHeaderValue\", authHeaderValue)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "AUTH",
+						"value": "{{authHeaderValue}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}\\all",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"all"
+					]
+				},
+				"description": "-call retreives all records from DB"
+			},
+			"response": []
+		},
+		{
+			"name": "Single Record",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "04cfbc1b-743a-487a-8d84-94b1c8ff9e53",
+						"exec": [
+							"function generateAuthHeader(dataToSign){\r",
+							"    var hash = CryptoJS.SHA256(dataToSign);\r",
+							"    return hash.toString(CryptoJS.enc.Hex)\r",
+							"}\r",
+							"\r",
+							"function getTimeStamp(){\r",
+							"    //returns UTC time in YYYYMMDDHHmmss format\r",
+							"    t = new Date();\r",
+							"    t = t.toISOString().replace(/T/, ' ').replace(/\\..+/, '');\r",
+							"    return t.match( /\\d+/g ).join('');\r",
+							"}\r",
+							"\r",
+							"\r",
+							"function isEnvValuePopulated(envVal) {\r",
+							"    if (_.isEmpty(pm.environment.get(envVal))) {\r",
+							"        pm.environment.set(envVal, \"--REQUIRED-VALUE-MISSING--\");\r",
+							"        return false;\r",
+							"    } else {\r",
+							"        return true;\r",
+							"    }\r",
+							"}\r",
+							"\r",
+							"//mark required value for this call in environment variables\r",
+							"isEnvValuePopulated(\"API_KEY\");\r",
+							"isEnvValuePopulated(\"record-id\");\r",
+							"\r",
+							"var authHeaderValue = generateAuthHeader(pm.environment.get(\"API_KEY\") + getTimeStamp())\r",
+							"pm.environment.set(\"authHeaderValue\", authHeaderValue)\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "AUTH",
+						"value": "{{authHeaderValue}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\":\"{{record-id}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}",
+					"host": [
+						"{{URL}}"
+					]
+				},
+				"description": "-obtain single record in JSON\r\n-requst body:\r\n{\r\n    \"id\":\"{{record_id}}\"\r\n}"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Record",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "cf51b8c1-f0f1-416f-816b-ab304746b7c9",
+						"exec": [
+							"function generateAuthHeader(dataToSign){\r",
+							"    var hash = CryptoJS.SHA256(dataToSign);\r",
+							"    return hash.toString(CryptoJS.enc.Hex)\r",
+							"}\r",
+							"\r",
+							"function getTimeStamp(){\r",
+							"    //returns UTC time in YYYYMMDDHHmmss format\r",
+							"    t = new Date();\r",
+							"    t = t.toISOString().replace(/T/, ' ').replace(/\\..+/, '');\r",
+							"    return t.match( /\\d+/g ).join('');\r",
+							"}\r",
+							"\r",
+							"\r",
+							"function isEnvValuePopulated(envVal) {\r",
+							"    if (_.isEmpty(pm.environment.get(envVal))) {\r",
+							"        pm.environment.set(envVal, \"--REQUIRED-VALUE-MISSING--\");\r",
+							"        return false;\r",
+							"    } else {\r",
+							"        return true;\r",
+							"    }\r",
+							"}\r",
+							"\r",
+							"//mark required values for this call in environment variables\r",
+							"isEnvValuePopulated(\"API_KEY\");\r",
+							"isEnvValuePopulated(\"record-name\");\r",
+							"isEnvValuePopulated(\"record-email\");\r",
+							"isEnvValuePopulated(\"record-department\");\r",
+							"isEnvValuePopulated(\"record-position\");\r",
+							"\r",
+							"var authHeaderValue = generateAuthHeader(pm.environment.get(\"API_KEY\") + getTimeStamp())\r",
+							"pm.environment.set(\"authHeaderValue\", authHeaderValue)\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "AUTH",
+						"type": "text",
+						"value": "{{authHeaderValue}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"{{record-name}}\",\r\n    \"department\":\"{{record-department}}\",\r\n    \"email\":\"{{record-email}}\",\r\n    \"position\":\"{{record-position}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}",
+					"host": [
+						"{{URL}}"
+					]
+				},
+				"description": "-obtain single record in JSON\r\n-requst body:\r\n{\r\n    \"id\":\"{{record_id}}\"\r\n}"
+			},
+			"response": []
+		},
+		{
+			"name": "Modify Record",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "24b7143e-7d46-4022-9347-5ff9850be713",
+						"exec": [
+							"function generateAuthHeader(dataToSign){\r",
+							"    var hash = CryptoJS.SHA256(dataToSign);\r",
+							"    return hash.toString(CryptoJS.enc.Hex)\r",
+							"}\r",
+							"\r",
+							"function getTimeStamp(){\r",
+							"    //returns UTC time in YYYYMMDDHHmmss format\r",
+							"    t = new Date();\r",
+							"    t = t.toISOString().replace(/T/, ' ').replace(/\\..+/, '');\r",
+							"    return t.match( /\\d+/g ).join('');\r",
+							"}\r",
+							"\r",
+							"\r",
+							"function isEnvValuePopulated(envVal) {\r",
+							"    if (_.isEmpty(pm.environment.get(envVal))) {\r",
+							"        pm.environment.set(envVal, \"--REQUIRED-VALUE-MISSING--\");\r",
+							"        return false;\r",
+							"    } else {\r",
+							"        return true;\r",
+							"    }\r",
+							"}\r",
+							"\r",
+							"//mark required values for this call in environment variables\r",
+							"isEnvValuePopulated(\"API_KEY\");\r",
+							"isEnvValuePopulated(\"record-id\");\r",
+							"\r",
+							"var authHeaderValue = generateAuthHeader(pm.environment.get(\"API_KEY\") + getTimeStamp())\r",
+							"pm.environment.set(\"authHeaderValue\", authHeaderValue)\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "AUTH",
+						"type": "text",
+						"value": "{{authHeaderValue}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\":\"{{record-id}}\",\r\n    \"department\":\"Human Resources\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}",
+					"host": [
+						"{{URL}}"
+					]
+				},
+				"description": "-obtain single record in JSON\r\n-requst body:\r\n{\r\n    \"id\":\"{{record_id}}\"\r\n}"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Record",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "7c6ef86e-de2a-4ac2-8927-92bb09783cc2",
+						"exec": [
+							"function generateAuthHeader(dataToSign){\r",
+							"    var hash = CryptoJS.SHA256(dataToSign);\r",
+							"    return hash.toString(CryptoJS.enc.Hex)\r",
+							"}\r",
+							"\r",
+							"function getTimeStamp(){\r",
+							"    //returns UTC time in YYYYMMDDHHmmss format\r",
+							"    t = new Date();\r",
+							"    t = t.toISOString().replace(/T/, ' ').replace(/\\..+/, '');\r",
+							"    return t.match( /\\d+/g ).join('');\r",
+							"}\r",
+							"\r",
+							"\r",
+							"function isEnvValuePopulated(envVal) {\r",
+							"    if (_.isEmpty(pm.environment.get(envVal))) {\r",
+							"        pm.environment.set(envVal, \"--REQUIRED-VALUE-MISSING--\");\r",
+							"        return false;\r",
+							"    } else {\r",
+							"        return true;\r",
+							"    }\r",
+							"}\r",
+							"\r",
+							"//mark required value for this call in environment variables\r",
+							"isEnvValuePopulated(\"API_KEY\");\r",
+							"isEnvValuePopulated(\"record-id\");\r",
+							"\r",
+							"var authHeaderValue = generateAuthHeader(pm.environment.get(\"API_KEY\") + getTimeStamp())\r",
+							"pm.environment.set(\"authHeaderValue\", authHeaderValue)\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "AUTH",
+						"type": "text",
+						"value": "{{authHeaderValue}}"
+					},
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\":\"{{record-id}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}",
+					"host": [
+						"{{URL}}"
+					]
+				},
+				"description": "-obtain single record in JSON\r\n-requst body:\r\n{\r\n    \"id\":\"{{record_id}}\"\r\n}"
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
