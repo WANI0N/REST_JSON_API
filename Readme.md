@@ -10,9 +10,9 @@
 
 - JSON request and response (not URL parameter(s) based)
 
-- Authetification method (can be disabled simply by removing 'API_KEY' from .env file)
+- authentication method (can be disabled simply by removing 'API_KEY' from .env file)
 
-- call logging, authetificaiton & DB call implemented via middleware
+- call logging, authentication & DB call implemented via middleware
 
 - included Postman Collection+Environment with authetification and all calls
 
@@ -44,14 +44,14 @@ DATABASE_URL=mongodb://localhost/users
 API_KEY=*insert_random_string_to_be_used_as_API_key*
 ```
  - modify URL before deploying, innitialy set to local host for testing
- - if API_KEY is removed (for testing) - API will work without any authetificaiton
+ - if API_KEY is removed (for testing) - API will work without any authentication
 
 ### 4) start server
 ```
 $ npm run devStart
 ```
 
-**Authetification:**
+**Authentication:**
 
  - 'AUTH' header set to: CryptoJS.SHA256(API_KEY + utcTime).toString(CryptoJS.enc.Hex)
 
