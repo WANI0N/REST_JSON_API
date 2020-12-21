@@ -14,7 +14,7 @@
 
 - call logging, authentication & DB call implemented via middleware
 
-- included Postman Collection+Environment with authetification and all calls
+- included Postman Collection+Environment with authentication and all calls
 
 **Prerequisites:**
 
